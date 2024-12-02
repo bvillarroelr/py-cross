@@ -253,13 +253,13 @@ class Levels(Scene):
                         self.frame_manager.switch_to(Menu(self.frame_manager))  # Cambia a ventana Menu
                         self.running = False  # Detenemos la ventana
                     elif self.button_5x5.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Nonos(self.frame_manager,grid_size=5))  # nonogramas de tam 5x5
+                        self.frame_manager.switch_to(Nonos(self.frame_manager, False, grid_size=5))  # nonogramas de tam 5x5
                         self.running = False
                     elif self.button_10x10.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Nonos(self.frame_manager,grid_size=10))  # nonogramas de tam 10x10
+                        self.frame_manager.switch_to(Nonos(self.frame_manager, False, grid_size=10))  # nonogramas de tam 10x10
                         self.running = False
                     elif self.button_15x15.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Nonos(self.frame_manager,grid_size=15))  # nonogramas de tam 15x15
+                        self.frame_manager.switch_to(Nonos(self.frame_manager, False, grid_size=15))  # nonogramas de tam 15x15
                         self.running = False
                     elif self.button_customs.is_over(mouse_pos):
                         self.frame_manager.switch_to(Customs(self.frame_manager))
@@ -318,7 +318,7 @@ class Customs(Scene):
                 if event.button == 1:
                     mouse_pos = pygame.mouse.get_pos()
                     if self.backButton.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Levels(self.frame_manager))  # Cambia a ventana Menu
+                        self.frame_manager.switch_to(Levels(self.frame_manager))
                         self.running = False  # Detenemos la ventana
                     elif self.button_create.is_over(mouse_pos):
                         self.frame_manager.switch_to(SizeSelect(self.frame_manager))
@@ -436,7 +436,7 @@ class SizeSelect(Scene):
                 if event.button == 1:
                     mouse_pos = pygame.mouse.get_pos()
                     if self.backButton.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Sandbox(self.frame_manager))  # Cambia a ventana Menu
+                        self.frame_manager.switch_to(Customs(self.frame_manager))  # Cambia a ventana Menu
                         self.running = False  # Detenemos la ventana
                     elif self.button_5x5.is_over(mouse_pos):
                         self.frame_manager.switch_to(Sandbox(self.frame_manager,grid_size=5))  # nonogramas de tam 5x5
@@ -573,7 +573,7 @@ class Menu(Scene):
 
 
 class Nonos(Scene):
-    def __init__(self, frame_manager, grid_size=SettingsManager.GRID_SIZE.value, ):
+    def __init__(self, frame_manager, custom, grid_size=SettingsManager.GRID_SIZE.value):
         super().__init__(frame_manager)
         self.grid_size = grid_size
         self.button_custom = Button(650, 80, 'Personalizado', self.font,width=200,height=60)
@@ -583,7 +583,10 @@ class Nonos(Scene):
         self.load_buttons = []
 
         # Crear botones de cada nonograma solución dentro de la carpeta solutions
-        folder_path = os.path.join('solutions',f's_{grid_size}x{grid_size}')
+        if not custom:
+            folder_path = os.path.join('solutions',f's_{grid_size}x{grid_size}')
+        else:
+            folder_path = os.path.join('customs',f'customs_{grid_size}x{grid_size}')
         solutions_files = [file for file in os.listdir(folder_path) if file.endswith('.pkl')]
         self.solutions_files = [os.path.join(folder_path, file) for file in solutions_files]
         for i,file in enumerate(solutions_files):
