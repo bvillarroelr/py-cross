@@ -4,6 +4,7 @@ from abc import ABC, abstractmethod
 from enum import Enum
 import pickle
 import numpy as np
+from numpy import dtype
 from pygame.examples.moveit import WIDTH, HEIGHT
 from pygame.mixer_music import get_volume
 from Components import Button, Title, Slider, ToggleButton
@@ -79,9 +80,9 @@ class Game(Scene):
         self.clock = pygame.time.Clock()
         self.solution = solution
         self.current_state = current_state if current_state else [[0] * grid_size for _ in range(grid_size)]
-
-        logical_board = LogicalBoard(grid_size, False, solution)  # Crear una instancia de LogicalBoard
-
+        logical_board = LogicalBoard(grid_size, solution)  # Crear una instancia de LogicalBoard
+        print(logical_board.board_l)
+        print(logical_board.board_s)
         self.board = Board(grid_size, WIDTH, HEIGHT, logical_board, self, current_state)  # Usa el tamaño del grid reci
         self.backButton = Button(1000, 500, 'Back', self.font)
         self.saveButton = Button(1000, 450, 'Save', self.font)
@@ -143,20 +144,13 @@ class Game(Scene):
 
 
 class LogicalBoard:
-    def __init__(self, grid_size, sandbox, solution=None): # sandbox es true o false dependiendo de si se ejecuta para customs o no
+    def __init__(self, grid_size, solution=None):
         self.grid_size = grid_size
         self.board_l = np.zeros((grid_size, grid_size))
-        self.sandbox = sandbox
-        # si no es sandbox, funcionar normalmente
-        if not sandbox:
-            if solution is not None:
-                self.board_s = np.array(solution)
-            else:
-                self.board_s = np.zeros((grid_size,grid_size))
+        self.board_s = np.array(solution)
 
     def find_numbers_r(self):
         rarray = []
-
         # contabilizar cuántos '1's hay en cada fila
         for i in range(self.grid_size):
             cont  = 0
@@ -321,7 +315,10 @@ class Customs(Scene):
                         self.frame_manager.switch_to(Levels(self.frame_manager))
                         self.running = False  # Detenemos la ventana
                     elif self.button_create.is_over(mouse_pos):
-                        self.frame_manager.switch_to(SizeSelect(self.frame_manager))
+                        self.frame_manager.switch_to(SizeSelect(self.frame_manager, False))
+                        self.running = False
+                    elif self.button_cargar.is_over(mouse_pos):
+                        self.frame_manager.switch_to(SizeSelect(self.frame_manager, True))
                         self.running = False
                     elif self.music_button.is_over(mouse_pos):
                         # silenciar música cuando se presiona el botón de música
@@ -398,9 +395,8 @@ class BoardSandbox:
 
         # Problema: no hay current_state aquí.
         # identificar bien qué es lo que debo guardar (creo que es logical board)
-        save_data = {
-            'matrix': self.matrix,
-        }
+        save_data = self.matrix
+
 
         try:
             print("Guardando archivo en:", full_path)
@@ -412,7 +408,7 @@ class BoardSandbox:
             return False
 
 class SizeSelect(Scene):
-    def __init__(self, frame_manager):
+    def __init__(self, frame_manager, load):
         super().__init__(frame_manager)
         self.button_5x5 = Button(185, 200, '5x5', self.font)
         self.button_10x10 = Button(565, 200, '10x10', self.font)
@@ -420,6 +416,7 @@ class SizeSelect(Scene):
         self.backButton = Button(50, 600, 'Back', self.font)
         self.music_button = ToggleButton(1000,600, text=None,font=None, icon_path_1="imagenes gui/icons/Speaker-Crossed.png", icon_path_2="imagenes gui/icons/Speaker-0.png", width=50, height=50)
         self.audio_manager = audio_manager  # Guardamos una referencia al AudioManager
+        self.load = load
 
     def handle_events(self):
         for event in pygame.event.get():
@@ -435,21 +432,38 @@ class SizeSelect(Scene):
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     mouse_pos = pygame.mouse.get_pos()
-                    if self.backButton.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Customs(self.frame_manager))  # Cambia a ventana Menu
-                        self.running = False  # Detenemos la ventana
-                    elif self.button_5x5.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Sandbox(self.frame_manager,grid_size=5))  # nonogramas de tam 5x5
-                        self.running = False
-                    elif self.button_10x10.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Sandbox(self.frame_manager,grid_size=10))  # nonogramas de tam 10x10
-                        self.running = False
-                    elif self.button_15x15.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Sandbox(self.frame_manager,grid_size=15))  # nonogramas de tam 15x15
-                        self.running = False
-                    elif self.music_button.is_over(mouse_pos):
-                        # silenciar música cuando se presiona el botón de música
-                        self.audio_manager.mute()
+                    if not self.load:
+                        if self.backButton.is_over(mouse_pos):
+                            self.frame_manager.switch_to(Customs(self.frame_manager))  # Cambia a ventana Customs
+                            self.running = False  # Detenemos la ventana
+                        elif self.button_5x5.is_over(mouse_pos):
+                            self.frame_manager.switch_to(Sandbox(self.frame_manager,grid_size=5))  # nonogramas de tam 5x5
+                            self.running = False
+                        elif self.button_10x10.is_over(mouse_pos):
+                            self.frame_manager.switch_to(Sandbox(self.frame_manager,grid_size=10))  # nonogramas de tam 10x10
+                            self.running = False
+                        elif self.button_15x15.is_over(mouse_pos):
+                            self.frame_manager.switch_to(Sandbox(self.frame_manager,grid_size=15))  # nonogramas de tam 15x15
+                            self.running = False
+                        elif self.music_button.is_over(mouse_pos):
+                            # silenciar música cuando se presiona el botón de música
+                            self.audio_manager.mute()
+                    else:
+                        if self.backButton.is_over(mouse_pos):
+                            self.frame_manager.switch_to(Customs(self.frame_manager))  # Cambia a ventana Menu
+                            self.running = False  # Detenemos la ventana
+                        elif self.button_5x5.is_over(mouse_pos):
+                            self.frame_manager.switch_to(Nonos(self.frame_manager, True, grid_size=5))  # nonogramas de tam 5x5
+                            self.running = False
+                        elif self.button_10x10.is_over(mouse_pos):
+                            self.frame_manager.switch_to(Nonos(self.frame_manager, True, grid_size=5)) # nonogramas de tam 10x10
+                            self.running = False
+                        elif self.button_15x15.is_over(mouse_pos):
+                            self.frame_manager.switch_to(Nonos(self.frame_manager, True, grid_size=15))  # nonogramas de tam 15x15
+                            self.running = False
+                        elif self.music_button.is_over(mouse_pos):
+                            # silenciar música cuando se presiona el botón de música
+                            self.audio_manager.mute()
     def draw(self):
         self.frame_manager.screen.fill(SettingsManager.BACKGROUND_COLOR.value)
         self.button_5x5.draw(self.frame_manager.screen)
@@ -489,8 +503,7 @@ class Sandbox(Scene):
                 if event.button == 1:
                     mouse_pos = pygame.mouse.get_pos()
                     if self.backButton.is_over(mouse_pos):
-                        self.frame_manager.switch_to(
-                            SizeSelect(self.frame_manager))  # Cambia a ventana al menu de niveles
+                        self.frame_manager.switch_to(Levels(self.frame_manager))  # Cambia a ventana al menu de niveles
                         self.running = False
                     elif self.saveButton.is_over(mouse_pos):
                         filename = 'saved_board'
@@ -579,6 +592,7 @@ class Nonos(Scene):
         self.button_custom = Button(650, 80, 'Personalizado', self.font,width=200,height=60)
         self.backButton = Button(50, 600, 'Back', self.font)
         self.load_button = Button(50, 525, 'Load', self.font)
+        self.custom = custom
         self.buttons = []
         self.load_buttons = []
 
@@ -589,6 +603,7 @@ class Nonos(Scene):
             folder_path = os.path.join('customs',f'customs_{grid_size}x{grid_size}')
         solutions_files = [file for file in os.listdir(folder_path) if file.endswith('.pkl')]
         self.solutions_files = [os.path.join(folder_path, file) for file in solutions_files]
+
         for i,file in enumerate(solutions_files):
             button = Button(650, 120+(i+1)*90, f'{i+1}',self.font,width=200, height=60)
             self.buttons.append(button)
@@ -596,7 +611,6 @@ class Nonos(Scene):
     def IniciarNono(self,number):
         if 0 <= number < len(self.solutions_files):
             file_path = self.solutions_files[number]
-
             # Intenta abrir el archivo y cargar la solución
             try:
                 with open(file_path, 'rb') as f:
