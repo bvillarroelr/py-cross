@@ -457,7 +457,7 @@ class SizeSelect(Scene):
                             self.frame_manager.switch_to(Nonos(self.frame_manager, True, grid_size=5))  # nonogramas de tam 5x5
                             self.running = False
                         elif self.button_10x10.is_over(mouse_pos):
-                            self.frame_manager.switch_to(Nonos(self.frame_manager, True, grid_size=5)) # nonogramas de tam 10x10
+                            self.frame_manager.switch_to(Nonos(self.frame_manager, True, grid_size=10)) # nonogramas de tam 10x10
                             self.running = False
                         elif self.button_15x15.is_over(mouse_pos):
                             self.frame_manager.switch_to(Nonos(self.frame_manager, True, grid_size=15))  # nonogramas de tam 15x15
@@ -590,7 +590,6 @@ class Nonos(Scene):
     def __init__(self, frame_manager, custom, grid_size=SettingsManager.GRID_SIZE.value):
         super().__init__(frame_manager)
         self.grid_size = grid_size
-        self.button_custom = Button(650, 80, 'Personalizado', self.font,width=200,height=60)
         self.backButton = Button(50, 600, 'Back', self.font)
         self.load_button = Button(50, 525, 'Load', self.font)
         self.custom = custom
@@ -630,7 +629,6 @@ class Nonos(Scene):
             for button in self.buttons:
                 button.handle_event(event)
 
-            self.button_custom.handle_event(event)
             self.backButton.handle_event(event)
             self.load_button.handle_event(event)
 
@@ -643,9 +641,6 @@ class Nonos(Scene):
                     mouse_pos = pygame.mouse.get_pos()
                     if self.backButton.is_over(mouse_pos):
                         self.frame_manager.switch_to(Levels(self.frame_manager)) # Cambia a ventana Levels
-                        self.running = False
-                    elif self.button_custom.is_over(mouse_pos):
-                        self.frame_manager.switch_to(Levels(self.frame_manager)) # Por el momento cambia a ventana Levels
                         self.running = False
                     elif self.load_button.is_over(mouse_pos):
                         self.open_saved_files()
@@ -721,7 +716,6 @@ class Nonos(Scene):
     def draw(self):
         self.frame_manager.screen.fill(SettingsManager.BACKGROUND_COLOR.value)  # Fondo morado oscuro
         # Dibuja los botones de cada nonograma a resolver
-        self.button_custom.draw(self.frame_manager.screen)
         self.backButton.draw(self.frame_manager.screen)
         self.load_button.draw(self.frame_manager.screen)
         for button in self.buttons:
