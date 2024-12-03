@@ -81,8 +81,6 @@ class Game(Scene):
         self.solution = solution
         self.current_state = current_state if current_state else [[0] * grid_size for _ in range(grid_size)]
         logical_board = LogicalBoard(grid_size, solution)  # Crear una instancia de LogicalBoard
-        print(logical_board.board_l)
-        print(logical_board.board_s)
         self.board = Board(grid_size, WIDTH, HEIGHT, logical_board, self, current_state)  # Usa el tamaño del grid reci
         self.backButton = Button(1000, 500, 'Back', self.font)
         self.saveButton = Button(1000, 450, 'Save', self.font)
@@ -368,7 +366,10 @@ class BoardSandbox:
         if 0 <= row < self.grid_size and 0 <= col < self.grid_size:
             if num_click == 1:
                 self.board[row][col].click()
-                self.matrix[row][col] = 1
+                if self.matrix[row][col]:
+                    self.matrix[row][col] = 0
+                else:
+                    self.matrix[row][col] = 1
             elif num_click == 2:
                 self.board[row][col].mark()
 
@@ -733,6 +734,7 @@ class Nonos(Scene):
 class FrameManager:
     def __init__(self):
         pygame.init()
+        pygame.display.set_caption('Pycross')
         self.screen = pygame.display.set_mode((SettingsManager.WIDTH.value, SettingsManager.HEIGHT.value))
         self.current_scene = None
 
